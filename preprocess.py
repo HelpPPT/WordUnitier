@@ -1,46 +1,45 @@
 import re
-from konlpy.tag import Hannanum, Okt
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk import pos_tag
+import time
+
 import pandas as pd
-import numpy as np
+from konlpy.tag import Hannanum
+from nltk import pos_tag
+from pandas import DataFrame
 
-class Preprocessing:
-    # def __init__(self, file):
-    #     self.data = pd.read_excel(file, sheet_name=0, index_col=0)
+hannanum = Hannanum()
 
-    def __init__(self, data):
-        self.data = data
 
-    def preprocess(self):
-        # 특수문자 삭제
-        self.data['prep'] = self.data['document'].str.replace('[^A-Za-z가-힣\s]', ' ', regex=True)
+def preprocess(data: DataFrame):
+    # 특수 문자 삭제
+    data['prep'] = data['document'].str.replace(r'[^A-Za-z가-힣\s]', ' ', regex=True)
 
-        # 다중 공백 제거
-        self.data['prep'] = self.data['prep'].apply(lambda x: re.sub('\s{2,}', ' ', x).strip())
+    # 다중 공백 제거
+    data['prep'] = data['prep'].apply(lambda x: re.sub(r'\s{2,}', ' ', x).strip())
 
-        # 토큰화 하기
-        hannanum = Hannanum()
+    tokenized_data = []
 
-        tokenized_data = []
+    for sen in data['prep']:
+        # 영어 단어 추출
+        eng_pattern = re.compile('[a-zA-Z]+')
+        eng_tokens = eng_pattern.findall(sen)
+        eng_nouns = [word for (word, pos) in pos_tag(eng_tokens)
+                     if (pos.startswith('NN') or pos.startswith('JJ') or pos.startswith('VB')) and len(word) > 1]
 
-        for sen in self.data['prep']:
-            # 영어 단어 추출
-            eng_pattern = re.compile('[a-zA-Z]+')
-            eng_tokens = eng_pattern.findall(sen)
-            eng_nouns = [word for (word, pos) in pos_tag(eng_tokens) 
-                        if (pos.startswith('NN') or pos.startswith('JJ') or pos.startswith('VB')) and len(word) > 1]
-            
-            # 한글 토큰화
-            tokens = hannanum.nouns(sen)
-            kor_tokens = [token for token in tokens if len(token) > 1]
-            tokenized_data.append(eng_nouns + kor_tokens)
+        # 한글 토큰화
+        tokens = hannanum.nouns(sen)
+        kor_tokens = [token for token in tokens if len(token) > 1]
+        tokenized_data.append(eng_nouns + kor_tokens)
 
-        self.data['tokens'] = tokenized_data
-        
-        return self.data
+    data['tokens'] = tokenized_data
+
+    return data
+
 
 if __name__ == '__main__':
-    test = Preprocessing("test.xlsx")
-    data = test.preprocess()
-    print(data)
+    for i in range(3):
+        start = time.time()
+        _data = preprocess(pd.DataFrame({'document': [
+            "트리 (Tree)의 개념 트리는 노드로 이루어진 자료구조로 스택이나 큐와 같은 선형 구조가 아닌 비선형 자료구조이다.", "트리는 계층적 관계를 표현하는 자료구조이다.", "트리는 알고리즘에서 많이 사용되므로 중요하다.", "잊지말자 트리!", "안녕하세요.", "이규형 너무 잘생겼어요.",
+            "크리스마스 트리 사고싶다."
+        ]}))
+        print(f'[{i + 1}] Preprocessing time: {time.time() - start}', _data)
