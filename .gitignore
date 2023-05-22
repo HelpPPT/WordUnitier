@@ -2,6 +2,7 @@ __pycache__/
 cc.ko.300.bin*
 test.ipynb
 test.xlsx
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
