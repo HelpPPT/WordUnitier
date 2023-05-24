@@ -13,7 +13,7 @@ class Grouping:
         word_pair_map = self.get_word_pair_map(count_tokens)
         min_sim = min(word_pair_map['sim'])
         max_sim = max(word_pair_map['sim'])
-        threshold = min_sim +(max_sim - min_sim) * 0.3
+        threshold = min_sim +(max_sim - min_sim) * 0.25
         cluster = {}
 
         for idx in range(len(word_pair_map['main'])):
