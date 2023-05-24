@@ -11,7 +11,7 @@ hannanum = Hannanum()
 
 def preprocess(data: DataFrame):
     # 특수 문자 삭제
-    data['prep'] = data['document'].str.replace(r'[^A-Za-z가-힣\s]', ' ', regex=True)
+    data['prep'] = data['document'].str.lower().str.replace(r'[^a-z가-힣\s]', ' ', regex=True)
 
     # 다중 공백 제거
     data['prep'] = data['prep'].apply(lambda x: re.sub(r'\s{2,}', ' ', x).strip())
