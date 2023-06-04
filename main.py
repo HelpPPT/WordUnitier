@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from gensim import models
 import pandas as pd
 from typing import List
@@ -9,6 +10,11 @@ from preprocess import preprocess
 print('loading model...')
 ko_model = models.fasttext.load_facebook_model('./cc.ko.300.bin')
 print('model loaded')
+
+class Item(BaseModel):
+    sentence_list: List[str]
+    is_filter: bool = False
+    glossary_name : str = None
 
 # start dev server with `uvicorn main:app --reload`
 # start prod server with `uvicorn --host 0.0.0.0 --port 8080 --workers 4 main:app`
@@ -25,13 +31,13 @@ app.add_middleware(
 
 
 @app.post('/grouping')
-async def group_words(sentence_list: List[str], is_filter=False, glossary_name=None):
-    data = pd.DataFrame({'document': sentence_list})
+async def group_words(item: Item):
+    data = pd.DataFrame({'document': item.sentence_list})
     prep_data = preprocess(data)
 
     grouping = Grouping(prep_data, ko_model)
     result = grouping.group_words()
-    if is_filter:
-        result = grouping.filter_by_glossary(glossary_name, result)
+    if item.is_filter:
+        result = grouping.filter_by_glossary(item.glossary_name, result)
 
     return result
