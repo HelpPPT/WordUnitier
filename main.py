@@ -25,11 +25,13 @@ app.add_middleware(
 
 
 @app.post('/grouping')
-async def group_words(sentence_list: List[str]):
+async def group_words(sentence_list: List[str], is_filter=False, glossary_name=None):
     data = pd.DataFrame({'document': sentence_list})
     prep_data = preprocess(data)
 
     grouping = Grouping(prep_data, ko_model)
     result = grouping.group_words()
+    if is_filter:
+        result = grouping.filter_by_glossary(glossary_name, result)
 
     return result

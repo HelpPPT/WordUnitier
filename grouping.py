@@ -59,8 +59,24 @@ class Grouping:
             test_word_list.remove(word)
         return self.model.wv.most_similar_to_given(word, test_word_list)
 
+        
+    def filter_by_glossary(self, glossary_name, old_cluster):
+        glossary_list = []
+        new_cluster = []
 
-    def remove_duplicate(self, data):
+        with open(f'./glossary/{glossary_name}.txt', 'r') as f:
+            glossary_list = f.read()
+        
+        for cluster in old_cluster:
+            temp = [word for word in cluster if word in glossary_list]
+            if len(temp) > 1:
+                new_cluster.append(temp)
+                
+        new_cluster = self.remove_duplicate(new_cluster)
+        return new_cluster
+
+    @staticmethod
+    def remove_duplicate(data):
         new_cluster = []
         for cluster in data:
             merged = False
